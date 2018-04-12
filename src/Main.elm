@@ -15,14 +15,18 @@ import Navigation exposing (Location)
 import Task
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Navigation.program (\_ -> Location)
+    Navigation.programWithFlags (\_ -> Location)
         { init = init
         , view = view >> toUnstyled
         , update = update
         , subscriptions = \_ -> Sub.none
         }
+
+
+type alias Flags =
+    { apiServer : String }
 
 
 
@@ -35,26 +39,32 @@ type alias Model =
     }
 
 
-init : Location -> ( Model, Cmd Msg )
-init loc =
+init : Flags -> Location -> ( Model, Cmd Msg )
+init flags loc =
     let
         useTestData =
             (loc.hostname == "localhost" || loc.hostname == "127.0.0.1")
                 && (loc.search /= "?live")
     in
         case useTestData of
-            True ->
-                ( Model [] Nothing, getEvents )
-
             False ->
+                ( Model [] Nothing, getEvents flags.apiServer )
+
+            True ->
                 ( Model [] Nothing, send <| ReceiveEvents testData )
 
 
-getEvents : Cmd Msg
-getEvents =
+getEvents : String -> Cmd Msg
+getEvents apiServer =
     let
+        url =
+            apiServer ++ config.dataPath
+
         request =
-            Http.get config.dataUrl (Json.Decode.list eventDecoder)
+            Http.get url (Json.Decode.list eventDecoder)
+
+        _ =
+            Debug.log "re" url
     in
         Http.send (ReceiveEvents << Result.mapError toString) request
 
