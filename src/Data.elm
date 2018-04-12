@@ -239,7 +239,8 @@ json =
     "end": "2018-04-15 23:00:00",
     "id": "5ace731c6a6942408317afe3",
     "labels": [
-      "featured"
+      "featured",
+      "food"
     ],
     "start": "2018-04-15 22:00:00",
     "sub_events": [],
@@ -249,7 +250,7 @@ json =
   {
     "_cls": "Event",
     "allDay": false,
-    "end": "2018-04-16 02:00:00",
+    "end": "2018-04-16 01:00:00",
     "id": "5ace73366a6942408317afe4",
     "labels": [
       "featured"

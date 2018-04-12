@@ -117,12 +117,23 @@ eventsView events =
         mkBlock : Event -> Block Event
         mkBlock event =
             makeBlock event (Date.toTime event.start) (Date.toTime event.end - Date.toTime event.start)
+
+        mkFullHeightBlock event =
+            let
+                block =
+                    mkBlock event
+            in
+                { block | rows = 12 }
+
+        locationless =
+            List.filter ((==) "" << (Maybe.withDefault "") << .location) events
     in
         eventsByLane events
             |> List.map (List.map mkBlock)
             |> List.map layoutLane
             |> adjustRows 3 0
             |> List.concat
+            |> (++) (List.map mkFullHeightBlock locationless)
             |> List.map eventView
 
 
