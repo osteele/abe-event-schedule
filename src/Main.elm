@@ -5,20 +5,20 @@ import Css
 import Data exposing (json)
 import Date exposing (Date)
 import DecoderExtra exposing (..)
-import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (class, css, src)
 import Http
 import Json.Decode
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
 import Layout exposing (..)
+import Navigation exposing (Location)
 import Task
 
 
 main : Program Never Model Msg
 main =
-    Html.program
-        { init = init <| Just testEvents
+    Navigation.program (\_ -> Location)
+        { init = init
         , view = view >> toUnstyled
         , update = update
         , subscriptions = \_ -> Sub.none
@@ -35,14 +35,19 @@ type alias Model =
     }
 
 
-init : Maybe (Result String (List Event)) -> ( Model, Cmd Msg )
-init testData =
-    case testData of
-        Nothing ->
-            ( Model [] Nothing, getEvents )
+init : Location -> ( Model, Cmd Msg )
+init loc =
+    let
+        useTestData =
+            (loc.hostname == "localhost" || loc.hostname == "127.0.0.1")
+                && (loc.search /= "?live")
+    in
+        case useTestData of
+            True ->
+                ( Model [] Nothing, getEvents )
 
-        Just result ->
-            ( Model [] Nothing, send <| ReceiveEvents result )
+            False ->
+                ( Model [] Nothing, send <| ReceiveEvents testData )
 
 
 getEvents : Cmd Msg
@@ -64,12 +69,16 @@ send =
 
 
 type Msg
-    = ReceiveEvents (Result String (List Event))
+    = Location
+    | ReceiveEvents (Result String (List Event))
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
+        Location ->
+            ( model, Cmd.none )
+
         ReceiveEvents result ->
             case result of
                 Ok events ->
@@ -222,6 +231,6 @@ eventDecoder =
         |> required "labels" (Json.Decode.list Json.Decode.string)
 
 
-testEvents : Result String (List Event)
-testEvents =
+testData : Result String (List Event)
+testData =
     Json.Decode.decodeString (Json.Decode.list eventDecoder) json
