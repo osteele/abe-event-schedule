@@ -44,7 +44,7 @@ init flags loc =
     let
         useTestData =
             (loc.hostname == "localhost" || loc.hostname == "127.0.0.1")
-                && (loc.search /= "?live")
+                && (loc.search /= "?server")
     in
         case useTestData of
             False ->
