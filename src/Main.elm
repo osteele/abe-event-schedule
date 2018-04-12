@@ -1,22 +1,26 @@
 module Main exposing (..)
 
+import Config exposing (config)
 import Css
 import Data exposing (json)
 import Date exposing (Date)
 import DecoderExtra exposing (..)
 import Html
 import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (class, css)
+import Http
 import Json.Decode
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
-import Html.Styled.Attributes exposing (class, css)
+import Task
 
 
-main : Program Never Model msg
+main : Program Never Model Msg
 main =
-    Html.beginnerProgram
-        { view = view >> toUnstyled
+    Html.program
+        { init = init <| Just testEvents
+        , view = view >> toUnstyled
         , update = update
-        , model = init testEvents
+        , subscriptions = \_ -> Sub.none
         }
 
 
@@ -30,23 +34,48 @@ type alias Model =
     }
 
 
-init : Result String (List Event) -> Model
-init result =
-    case result of
-        Ok events ->
-            Model events Nothing
+init : Maybe (Result String (List Event)) -> ( Model, Cmd Msg )
+init testData =
+    case testData of
+        Nothing ->
+            ( Model [] Nothing, getEvents )
 
-        Err err ->
-            Model [] (Just err)
+        Just result ->
+            ( Model [] Nothing, send <| ReceiveEvents result )
+
+
+getEvents : Cmd Msg
+getEvents =
+    let
+        request =
+            Http.get config.dataUrl (Json.Decode.list eventDecoder)
+    in
+        Http.send (ReceiveEvents << Result.mapError toString) request
+
+
+send : a -> Cmd a
+send =
+    Task.succeed >> Task.perform identity
 
 
 
 -- UPDATE
 
 
-update : a -> Model -> Model
+type Msg
+    = ReceiveEvents (Result String (List Event))
+
+
+update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
-    model
+    case msg of
+        ReceiveEvents result ->
+            case result of
+                Ok events ->
+                    ( Model events Nothing, Cmd.none )
+
+                Err err ->
+                    ( Model [] (Just err), Cmd.none )
 
 
 
@@ -58,10 +87,10 @@ view { error, events } =
     div []
         [ div [ class "logo" ] []
         , h1 [] [ text "Schedule" ]
-        , div [] [ text <| Maybe.withDefault "" error ]
+        , div [ class "error" ] [ text <| Maybe.withDefault "" error ]
         , hourLabels
         , div [ css [ Css.position Css.relative ] ] <|
-            (List.map swimlaneLabel swimlaneNames)
+            (List.map swimlaneLabel config.swimlaneNames)
                 ++ (eventsView events)
         ]
 
@@ -112,13 +141,6 @@ eventView object =
                 ]
             ]
             [ text event.title ]
-
-
-config =
-    { rowHeight = 40
-    , rowPadding = 10
-    , hourWidth = 100
-    }
 
 
 hourLabels : Html msg
@@ -209,7 +231,7 @@ findSwimlaneEvents laneName events =
 
 eventsBySwimlane : List Event -> List (List Event)
 eventsBySwimlane events =
-    List.map (\name -> findSwimlaneEvents (Just name) events) swimlaneNames
+    List.map (\name -> findSwimlaneEvents (Just name) events) config.swimlaneNames
 
 
 
@@ -229,19 +251,3 @@ eventDecoder =
 testEvents : Result String (List Event)
 testEvents =
     Json.Decode.decodeString (Json.Decode.list eventDecoder) json
-
-
-
--- CONFIGURATION
--- swimlanes : Result String (List String)
--- swimlanes =
---     events
---         |> Result.map (List.map .location)
---         |> Result.map (List.filterMap identity)
---         |> Result.map Set.fromList
---         |> Result.map Set.toList
-
-
-swimlaneNames : List String
-swimlaneNames =
-    [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
