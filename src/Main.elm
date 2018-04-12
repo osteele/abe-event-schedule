@@ -11,6 +11,7 @@ import Html.Styled.Attributes exposing (class, css)
 import Http
 import Json.Decode
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
+import Layout exposing (..)
 import Task
 
 
@@ -104,18 +105,24 @@ laneLabel title =
 
 eventsView : List Event -> List (Html msg)
 eventsView events =
-    eventsBySwimlane events
-        |> List.map layoutLane
-        |> adjustRows 3 0
-        |> List.concat
-        |> List.map eventView
+    let
+        mkBlock : Event -> Block Event
+        mkBlock event =
+            makeBlock event (Date.toTime event.start) (Date.toTime event.end - Date.toTime event.start)
+    in
+        eventsBySwimlane events
+            |> List.map (List.map mkBlock)
+            |> List.map layoutLane
+            |> adjustRows 3 0
+            |> List.concat
+            |> List.map eventView
 
 
-eventView : PositionedEvent -> Html msg
-eventView object =
+eventView : Block Event -> Html msg
+eventView block =
     let
         event =
-            object.event
+            block.event
 
         hours date =
             toFloat (Date.hour date - 10) + (Date.minute date |> toFloat) / 60
@@ -137,7 +144,7 @@ eventView object =
             , css
                 [ Css.position Css.absolute
                 , Css.backgroundColor (Css.hex <| eventColor event)
-                , Css.top (Css.px <| toFloat <| object.row * config.rowHeight)
+                , Css.top (Css.px <| toFloat <| block.row * config.rowHeight)
                 , Css.height (Css.px <| toFloat <| eventHeight)
                 , Css.left (Css.px <| left)
                 , Css.width (Css.px <| right - left - config.xMargin)
@@ -155,63 +162,6 @@ hourLabels =
         div [ class "hours" ] <|
             div [ class "location" ] []
                 :: (List.map hourLabel <| List.range 10 21)
-
-
-
--- LAYOUT
-
-
-type alias PositionedEvent =
-    { event : Event, row : Int }
-
-
-adjustRows : Int -> Int -> List (List PositionedEvent) -> List (List PositionedEvent)
-adjustRows rowHeight dr rows =
-    case rows of
-        [] ->
-            []
-
-        r :: rs ->
-            let
-                newRow =
-                    List.map (\e -> { e | row = e.row + dr }) r
-            in
-                newRow :: adjustRows rowHeight (dr + rowHeight) rs
-
-
-layoutLane : List Event -> List PositionedEvent
-layoutLane events =
-    let
-        layoutRow =
-            List.map (\e -> PositionedEvent e 0)
-    in
-        lanes events
-            |> List.map layoutRow
-            |> adjustRows 1 0
-            |> List.concat
-
-
-lanes : List Event -> List (List Event)
-lanes events =
-    let
-        addToRow : Event -> List (List Event) -> List (List Event)
-        addToRow event rows =
-            case rows of
-                [] ->
-                    [ [ event ] ]
-
-                r :: rs ->
-                    if List.any (\e -> eventsOverlap event e) r then
-                        r :: addToRow event rs
-                    else
-                        (event :: r) :: rs
-
-        eventsOverlap : Event -> Event -> Bool
-        eventsOverlap e1 e2 =
-            (Date.toTime e1.start < Date.toTime e2.end)
-                && (Date.toTime e2.start < Date.toTime e1.end)
-    in
-        List.foldl addToRow [] events
 
 
 
