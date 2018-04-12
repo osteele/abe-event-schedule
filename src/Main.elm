@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Config exposing (config)
+import Config exposing (..)
 import Css
 import Data exposing (json)
 import Date exposing (Date)
@@ -117,27 +117,30 @@ eventView object =
         event =
             object.event
 
+        hourOffset date =
+            toFloat <| 1 + Date.hour date - 10
+
         h1 =
-            1 + Date.hour event.start - 10
+            hourOffset event.start
 
         h2 =
-            1 + Date.hour event.end - 10
+            hourOffset event.end
 
         eventHeight =
             config.rowHeight - config.rowPadding
 
         hourWidth =
-            config.hourWidth
+            toFloat config.hourWidth
     in
         div
             [ class "event"
             , css
                 [ Css.position Css.absolute
-                , Css.backgroundColor (Css.rgb 250 50 250)
+                , Css.backgroundColor (Css.hex <| eventColor event)
                 , Css.top (Css.px <| toFloat <| object.row * config.rowHeight)
                 , Css.height (Css.px <| toFloat <| eventHeight)
-                , Css.left (Css.px <| toFloat <| h1 * hourWidth)
-                , Css.width (Css.px <| toFloat <| (h2 - h1) * hourWidth - 10)
+                , Css.left (Css.px <| h1 * hourWidth)
+                , Css.width (Css.px <| (h2 - h1) * hourWidth - 10)
                 ]
             ]
             [ text event.title ]
@@ -216,7 +219,8 @@ lanes events =
 
 
 type alias Event =
-    { start : Date
+    { id : String
+    , start : Date
     , end : Date
     , title : String
     , location : Maybe String
@@ -241,6 +245,7 @@ eventsBySwimlane events =
 eventDecoder : Json.Decode.Decoder Event
 eventDecoder =
     decode Event
+        |> required "id" Json.Decode.string
         |> required "start" dateDecoder
         |> required "end" dateDecoder
         |> required "title" Json.Decode.string
