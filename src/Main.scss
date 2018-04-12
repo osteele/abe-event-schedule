@@ -38,4 +38,10 @@ h1 {
     line-height: 95%;
     color: white;
     border-radius: 2px;
+    &.full-height .label {
+        font-size: 150%;
+        line-height: 110%;
+        transform: rotate(90deg) translateX(220px) translateY(-25px);
+        transform-origin: center 0;
+    }
 }

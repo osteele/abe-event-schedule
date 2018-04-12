@@ -142,7 +142,7 @@ eventsView events =
                 block =
                     mkBlock event
             in
-                { block | rows = 12 }
+                { block | rows = config.rowsPerLane * List.length config.laneNames }
 
         locationless =
             List.filter ((==) "" << (Maybe.withDefault "") << .location) events
@@ -150,7 +150,7 @@ eventsView events =
         eventsByLane events
             |> List.map (List.map mkBlock)
             |> List.map layoutLane
-            |> adjustRows 3 0
+            |> adjustRows config.rowsPerLane 0
             |> List.concat
             |> (++) (List.map mkFullHeightBlock locationless)
             |> List.map eventView
@@ -179,6 +179,12 @@ eventView block =
     in
         div
             [ class "event"
+            , class
+                (if block.rows > config.rowsPerLane then
+                    "full-height"
+                 else
+                    ""
+                )
             , css
                 [ Css.position Css.absolute
                 , Css.backgroundColor (Css.hex <| eventColor event)
@@ -188,7 +194,7 @@ eventView block =
                 , Css.width (Css.px <| right - left - config.xMargin)
                 ]
             ]
-            [ text event.title ]
+            [ div [ class "label" ] [ text event.title ] ]
 
 
 hourLabels : Html msg

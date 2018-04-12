@@ -14,6 +14,7 @@ config =
     , xMargin = 10
     , logoPath = "/slacfest.png"
     , dataPath = "/events/?start=2018-4-15&end=2018-4-16"
+    , rowsPerLane = 3
     , laneNames =
         [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
     , colors = Array.fromList [ "#ba263d", "#0090c6", "#705590", "#e37035", "#369249" ]
