@@ -7,7 +7,7 @@ import Date exposing (Date)
 import DecoderExtra exposing (..)
 import Html
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (class, css)
+import Html.Styled.Attributes exposing (class, css, src)
 import Http
 import Json.Decode
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
@@ -86,14 +86,22 @@ update msg model =
 view : Model -> Html msg
 view { error, events } =
     div []
-        [ div [ class "logo" ] []
-        , h1 [] [ text "Schedule" ]
+        [ h1 [] [ logo, text "Schedule" ]
         , div [ class "error" ] [ text <| Maybe.withDefault "" error ]
         , hourLabels
         , div [ css [ Css.position Css.relative ] ] <|
             (List.map laneLabel config.laneNames)
                 ++ (eventsView events)
         ]
+
+
+logo : Html msg
+logo =
+    img
+        [ class "logo"
+        , src <| config.logoPath
+        ]
+        []
 
 
 laneLabel : String -> Html msg

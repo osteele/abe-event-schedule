@@ -12,6 +12,7 @@ config =
     , rowPadding = 10
     , hourWidth = 100
     , xMargin = 10
+    , logoPath = "/slacfest.png"
     , dataUrl = "http://localhost:3000/events/?start=2018-4-15&end=2018-4-16"
     , laneNames =
         [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]

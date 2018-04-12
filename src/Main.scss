@@ -1,5 +1,11 @@
+.logo {
+    width: 80px;
+}
+
 h1 {
+    font-size: 50px;
     text-transform: uppercase;
+    font-weight: normal;
 }
 
 .error {
@@ -31,4 +37,5 @@ h1 {
     padding-top: 5px;
     line-height: 95%;
     color: white;
+    border-radius: 2px;
 }
