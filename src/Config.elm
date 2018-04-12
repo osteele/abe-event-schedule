@@ -7,11 +7,13 @@ import Char
 
 
 config =
-    { rowHeight = 40
+    { laneLabelWidth = 120
+    , rowHeight = 40
     , rowPadding = 10
     , hourWidth = 100
+    , xMargin = 10
     , dataUrl = "http://localhost:3000/events/?start=2018-4-15&end=2018-4-16"
-    , swimlaneNames =
+    , laneNames =
         [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
     , colors = Array.fromList [ "#ba263d", "#0090c6", "#705590", "#e37035", "#369249" ]
     }

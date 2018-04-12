@@ -14,11 +14,13 @@ h1 {
 }
 
 .swimlane {
-    height: 120px;
+    height: 119px;
     border-top: 1px solid gray;
     .label {
         display: inline-block;
-        width: 100px;
+        font-size: 20pt;
+        text-align: center;
+        width: 120px;
         font-variant: small-caps;
     }
 }
@@ -26,5 +28,7 @@ h1 {
 .event {
     font-variant: small-caps;
     text-align: center;
+    padding-top: 5px;
+    line-height: 95%;
     color: white;
 }

@@ -90,13 +90,13 @@ view { error, events } =
         , div [ class "error" ] [ text <| Maybe.withDefault "" error ]
         , hourLabels
         , div [ css [ Css.position Css.relative ] ] <|
-            (List.map swimlaneLabel config.swimlaneNames)
+            (List.map laneLabel config.laneNames)
                 ++ (eventsView events)
         ]
 
 
-swimlaneLabel : String -> Html msg
-swimlaneLabel title =
+laneLabel : String -> Html msg
+laneLabel title =
     div [ class "swimlane" ]
         [ div [ class "label" ] [ text <| title ]
         ]
@@ -105,7 +105,7 @@ swimlaneLabel title =
 eventsView : List Event -> List (Html msg)
 eventsView events =
     eventsBySwimlane events
-        |> List.map layoutSwimlane
+        |> List.map layoutLane
         |> adjustRows 3 0
         |> List.concat
         |> List.map eventView
@@ -117,20 +117,20 @@ eventView object =
         event =
             object.event
 
-        hourOffset date =
-            toFloat <| 1 + Date.hour date - 10
+        hours date =
+            toFloat (Date.hour date - 10) + (Date.minute date |> toFloat) / 60
 
-        h1 =
-            hourOffset event.start
+        xpos date =
+            config.laneLabelWidth + config.hourWidth * hours date
 
-        h2 =
-            hourOffset event.end
+        left =
+            xpos event.start
+
+        right =
+            xpos event.end
 
         eventHeight =
             config.rowHeight - config.rowPadding
-
-        hourWidth =
-            toFloat config.hourWidth
     in
         div
             [ class "event"
@@ -139,8 +139,8 @@ eventView object =
                 , Css.backgroundColor (Css.hex <| eventColor event)
                 , Css.top (Css.px <| toFloat <| object.row * config.rowHeight)
                 , Css.height (Css.px <| toFloat <| eventHeight)
-                , Css.left (Css.px <| h1 * hourWidth)
-                , Css.width (Css.px <| (h2 - h1) * hourWidth - 10)
+                , Css.left (Css.px <| left)
+                , Css.width (Css.px <| right - left - config.xMargin)
                 ]
             ]
             [ text event.title ]
@@ -179,8 +179,8 @@ adjustRows rowHeight dr rows =
                 newRow :: adjustRows rowHeight (dr + rowHeight) rs
 
 
-layoutSwimlane : List Event -> List PositionedEvent
-layoutSwimlane events =
+layoutLane : List Event -> List PositionedEvent
+layoutLane events =
     let
         layoutRow =
             List.map (\e -> PositionedEvent e 0)
@@ -235,7 +235,7 @@ findSwimlaneEvents laneName events =
 
 eventsBySwimlane : List Event -> List (List Event)
 eventsBySwimlane events =
-    List.map (\name -> findSwimlaneEvents (Just name) events) config.swimlaneNames
+    List.map (\name -> findSwimlaneEvents (Just name) events) config.laneNames
 
 
 
