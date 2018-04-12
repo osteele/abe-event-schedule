@@ -1,0 +1,22 @@
+.hours {
+    div {
+        display: inline-block;
+        width: 100px;
+    }
+}
+
+.swimlane {
+    height: 120px;
+    border-top: 1px solid gray;
+    .label {
+        display: inline-block;
+        width: 100px;
+        font-variant: small-caps;
+    }
+}
+
+.event {
+    border: 1px solid red;
+    font-variant: small-caps;
+    margin: auto;
+}
