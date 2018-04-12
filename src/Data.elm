@@ -70,7 +70,7 @@ json =
     "labels": [
       "featured"
     ],
-    "location": "Upper Level",
+    "location": "Down Stairs",
     "start": "2018-04-15 15:00:00",
     "sub_events": [],
     "title": "3D Scanning",
@@ -117,6 +117,21 @@ json =
     "start": "2018-04-15 16:00:00",
     "sub_events": [],
     "title": "Snacks",
+    "visibility": "public"
+  },
+  {
+    "_cls": "Event",
+    "allDay": false,
+    "end": "2018-04-15 19:00:00",
+    "id": "5ace70d16a6942408317afd5",
+    "labels": [
+      "food",
+      "featured"
+    ],
+    "location": "Entrance",
+    "start": "2018-04-15 17:00:00",
+    "sub_events": [],
+    "title": "DIY Grilled Cheese",
     "visibility": "public"
   },
   {
@@ -179,7 +194,7 @@ json =
   {
     "_cls": "Event",
     "allDay": false,
-    "end": "2018-04-15 21:00:00",
+    "end": "2018-04-15 20:00:00",
     "id": "5ace71c96a6942408317afdb",
     "labels": [
       "featured"
