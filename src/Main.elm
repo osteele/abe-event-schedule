@@ -118,7 +118,7 @@ eventsView events =
         mkBlock event =
             makeBlock event (Date.toTime event.start) (Date.toTime event.end - Date.toTime event.start)
     in
-        eventsBySwimlane events
+        eventsByLane events
             |> List.map (List.map mkBlock)
             |> List.map layoutLane
             |> adjustRows 3 0
@@ -144,8 +144,8 @@ eventView block =
         right =
             xpos event.end
 
-        eventHeight =
-            config.rowHeight - config.rowPadding
+        height =
+            config.rowHeight * block.rows - config.rowPadding
     in
         div
             [ class "event"
@@ -153,7 +153,7 @@ eventView block =
                 [ Css.position Css.absolute
                 , Css.backgroundColor (Css.hex <| eventColor event)
                 , Css.top (Css.px <| toFloat <| block.row * config.rowHeight)
-                , Css.height (Css.px <| toFloat <| eventHeight)
+                , Css.height (Css.px <| toFloat <| height)
                 , Css.left (Css.px <| left)
                 , Css.width (Css.px <| right - left - config.xMargin)
                 ]
@@ -186,14 +186,14 @@ type alias Event =
     }
 
 
-findSwimlaneEvents : Maybe String -> List Event -> List Event
-findSwimlaneEvents laneName events =
+findLaneEvents : Maybe String -> List Event -> List Event
+findLaneEvents laneName events =
     List.filter (.location >> (==) laneName) events
 
 
-eventsBySwimlane : List Event -> List (List Event)
-eventsBySwimlane events =
-    List.map (\name -> findSwimlaneEvents (Just name) events) config.laneNames
+eventsByLane : List Event -> List (List Event)
+eventsByLane events =
+    List.map (\name -> findLaneEvents (Just name) events) config.laneNames
 
 
 
