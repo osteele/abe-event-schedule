@@ -203,8 +203,7 @@ schedule ({ lanes, laneless } as sched) =
         div []
             [ hourLabels
             , div [ css [ Css.position Css.relative ] ] <|
-                List.map laneLabel config.lanes
-                    ++ List.map (laneView config.laneRows) lanes
+                List.map (laneView config.laneRows) lanes
                     ++ List.map (eventView 0 1.0) laneless
             ]
 
@@ -220,15 +219,8 @@ hourLabels =
                 :: (List.map hourLabel <| List.range 10 21)
 
 
-laneLabel : String -> Html msg
-laneLabel title =
-    div [ class "swimlane" ]
-        [ div [ class "label" ] [ text <| title ]
-        ]
-
-
 laneView : Int -> Lane -> Html msg
-laneView maxRows (( _, row ) as lane) =
+laneView maxRows (( name, row ) as lane) =
     let
         topRow =
             row |> List.map .row |> List.minimum |> Maybe.withDefault 0
@@ -236,14 +228,15 @@ laneView maxRows (( _, row ) as lane) =
         stretch =
             (toFloat maxRows) / (toFloat <| laneRowCount lane)
     in
-        div [] <| List.map (eventView topRow stretch) row
+        div [ class "lane" ] <|
+            [ h2 [] [ text name ]
+            ]
+                ++ List.map (eventView topRow stretch) row
 
 
 eventView : Int -> Float -> Block Event -> Html msg
 eventView topRow yScale { model, row, rows } =
     let
-        -- _ =
-        -- Debug.log "stretch" stretch
         getDateHours : Date -> Float
         getDateHours date =
             toFloat (Date.hour date - 10) + (Date.minute date |> toFloat) / 60
@@ -252,8 +245,18 @@ eventView topRow yScale { model, row, rows } =
         getDateX date =
             config.laneLabelWidth + config.hourWidth * getDateHours date
 
+        scaleAround origin scale x =
+            x
+                |> flip (-) origin
+                |> (*) yScale
+                |> (+) origin
+
         ( left, right ) =
             ( getDateX model.start, getDateX model.end )
+
+        top =
+            toFloat (row * config.rowHeight)
+                |> scaleAround (toFloat <| topRow * config.rowHeight) yScale
 
         height =
             config.rowHeight * rows - config.rowPadding
@@ -271,11 +274,11 @@ eventView topRow yScale { model, row, rows } =
                 )
             , css
                 [ Css.position Css.absolute
-                , Css.backgroundColor (Css.hex <| eventColor model)
-                , Css.top (Css.px <| (+) (toFloat <| topRow * config.rowHeight) <| (*) yScale <| toFloat <| (row - topRow) * config.rowHeight)
-                , Css.height (Css.px <| (*) yScale <| toFloat height)
-                , Css.left (Css.px left)
-                , Css.width (Css.px <| right - left - config.eventRightMargin)
+                , (Css.backgroundColor << Css.hex) <| eventColor model
+                , (Css.top << Css.px) top
+                , (Css.height << Css.px) <| yScale * toFloat height
+                , (Css.left << Css.px) left
+                , (Css.width << Css.px) <| right - left - config.eventRightMargin
                 ]
             ]
             [ div [ class "label" ]

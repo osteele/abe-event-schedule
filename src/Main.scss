@@ -19,13 +19,14 @@ h1 {
     }
 }
 
-.swimlane {
+.lane {
     height: 119px;
     border-top: 1px solid gray;
-    .label {
+    h2 {
         display: inline-block;
         font-size: 20pt;
         text-align: center;
+        font-weight: normal;
         width: 120px;
         font-variant: small-caps;
     }
