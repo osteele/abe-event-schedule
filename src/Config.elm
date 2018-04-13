@@ -30,8 +30,7 @@ config =
     , startDate = "2018-4-15"
     , endDate = "2018-4-16"
     , rowsPerLane = 3
-    , laneNames =
-        [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
+    , lanes = [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
     , colors = Array.fromList [ "#ba263d", "#0090c6", "#705590", "#e37035", "#369249" ]
     }
 

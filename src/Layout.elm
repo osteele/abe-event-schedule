@@ -1,6 +1,7 @@
 module Layout
     exposing
         ( Block
+        , Row
         , adjustRows
         , layoutLane
         , makeBlock

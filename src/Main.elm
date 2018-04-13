@@ -11,7 +11,8 @@ import Html.Styled.Attributes exposing (class, css, src)
 import Http
 import Json.Decode
 import Json.Decode.Pipeline exposing (decode, required)
-import Layout exposing (..)
+import Layout exposing (Block)
+import List.Extra as List
 import Navigation exposing (Location)
 import Task
 
@@ -101,6 +102,48 @@ update msg model =
 
 
 
+-- VIEW MODEL
+
+
+type alias Schedule =
+    { lanes : List ( String, Layout.Row Event )
+    , laneless : List (Block Event)
+    }
+
+
+makeSchedule : List Event -> Schedule
+makeSchedule events =
+    let
+        mkBlock event =
+            let
+                t0 =
+                    Date.toTime event.start
+
+                t1 =
+                    Date.toTime event.end - Date.toTime event.start
+            in
+                Layout.makeBlock event t0 t1
+
+        mkFullHeightBlock : Event -> Block Event
+        mkFullHeightBlock event =
+            let
+                block =
+                    mkBlock event
+            in
+                { block | rows = config.rowsPerLane * List.length config.lanes }
+    in
+        { lanes =
+            eventsByLane events
+                |> List.map (List.map mkBlock)
+                |> List.map Layout.layoutLane
+                |> Layout.adjustRows config.rowsPerLane 0
+                |> List.zip config.lanes
+        , laneless =
+            List.map mkFullHeightBlock <| eventsAtLocation Nothing events
+        }
+
+
+
 -- VIEW
 
 
@@ -110,10 +153,7 @@ view { error, events } =
         [ h1 [] [ logo, text "Schedule" ]
         , gitHubRibbon
         , div [ class "error" ] [ text <| Maybe.withDefault "" error ]
-        , hourLabels
-        , div [ css [ Css.position Css.relative ] ] <|
-            List.map laneLabel config.laneNames
-                ++ eventsView events
+        , schedule <| makeSchedule events
         ]
 
 
@@ -134,6 +174,17 @@ logo =
         []
 
 
+schedule : Schedule -> Html msg
+schedule { lanes, laneless } =
+    div []
+        [ hourLabels
+        , div [ css [ Css.position Css.relative ] ] <|
+            List.map laneLabel config.lanes
+                ++ List.map laneView lanes
+                ++ List.map eventView laneless
+        ]
+
+
 hourLabels : Html msg
 hourLabels =
     let
@@ -152,38 +203,9 @@ laneLabel title =
         ]
 
 
-eventsView : List Event -> List (Html msg)
-eventsView events =
-    let
-        mkBlock : Event -> Block Event
-        mkBlock event =
-            let
-                t0 =
-                    Date.toTime event.start
-
-                t1 =
-                    Date.toTime event.end - Date.toTime event.start
-            in
-                makeBlock event t0 t1
-
-        mkFullHeightBlock : Event -> Block Event
-        mkFullHeightBlock event =
-            let
-                block =
-                    mkBlock event
-            in
-                { block | rows = config.rowsPerLane * List.length config.laneNames }
-
-        locationlessEvents =
-            eventsAtLocation Nothing events
-    in
-        eventsByLane events
-            |> List.map (List.map mkBlock)
-            |> List.map layoutLane
-            |> adjustRows config.rowsPerLane 0
-            |> List.concat
-            |> (++) (List.map mkFullHeightBlock locationlessEvents)
-            |> List.map eventView
+laneView : ( String, Layout.Row Event ) -> Html msg
+laneView ( _, row ) =
+    div [] <| List.map eventView row
 
 
 eventView : Block Event -> Html msg
@@ -249,7 +271,7 @@ eventsAtLocation loc events =
 
 eventsByLane : List Event -> List (List Event)
 eventsByLane events =
-    List.map (\name -> eventsAtLocation (Just name) events) config.laneNames
+    List.map (\name -> eventsAtLocation (Just name) events) config.lanes
 
 
 
