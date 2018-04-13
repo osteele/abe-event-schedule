@@ -61,17 +61,6 @@ init flags loc =
 getEvents : String -> Cmd Msg
 getEvents apiServer =
     let
-        urlJoin base path =
-            case ( String.endsWith "/" base, String.startsWith "/" path ) of
-                ( True, True ) ->
-                    base ++ String.dropLeft 1 path
-
-                ( False, False ) ->
-                    base ++ "/" ++ path
-
-                _ ->
-                    base ++ path
-
         path =
             String.join ""
                 [ "/events?start="
@@ -85,11 +74,6 @@ getEvents apiServer =
     in
         Http.get url (Json.Decode.list eventDecoder)
             |> Http.send (ReceiveEvents << Result.mapError toString)
-
-
-send : a -> Cmd a
-send =
-    Task.succeed >> Task.perform identity
 
 
 
@@ -286,3 +270,32 @@ eventDecoder =
 parseTestData : Result String (List Event)
 parseTestData =
     Json.Decode.decodeString (Json.Decode.list eventDecoder) json
+
+
+
+-- HELPERS
+
+
+{-| Send a message.
+-}
+send : a -> Cmd a
+send =
+    Task.succeed >> Task.perform identity
+
+
+{-| Poor-person's URL join. This just handles the case of joining a base with
+a path, with all possible combinations of '/' and the end of the base and '/'
+at the start of the path. It assumes the path is meant to be absolute, and
+doesn't handle `..`.
+-}
+urlJoin : String -> String -> String
+urlJoin base path =
+    case ( String.endsWith "/" base, String.startsWith "/" path ) of
+        ( True, True ) ->
+            base ++ String.dropLeft 1 path
+
+        ( False, False ) ->
+            base ++ "/" ++ path
+
+        _ ->
+            base ++ path
