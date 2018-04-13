@@ -61,14 +61,27 @@ init flags loc =
 getEvents : String -> Cmd Msg
 getEvents apiServer =
     let
-        url =
+        urlJoin base path =
+            case ( String.endsWith "/" base, String.startsWith "/" path ) of
+                ( True, True ) ->
+                    base ++ String.dropLeft 1 path
+
+                ( False, False ) ->
+                    base ++ "/" ++ path
+
+                _ ->
+                    base ++ path
+
+        path =
             String.join ""
-                [ apiServer
-                , "/events?start="
+                [ "/events?start="
                 , config.startDate
                 , "&end="
                 , config.endDate
                 ]
+
+        url =
+            urlJoin apiServer path
     in
         Http.get url (Json.Decode.list eventDecoder)
             |> Http.send (ReceiveEvents << Result.mapError toString)
