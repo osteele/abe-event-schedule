@@ -1,4 +1,4 @@
-module Data exposing (..)
+module Data exposing (json)
 
 
 json : String

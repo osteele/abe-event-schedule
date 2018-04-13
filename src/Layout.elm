@@ -1,27 +1,54 @@
-module Layout exposing (..)
+module Layout
+    exposing
+        ( Block
+        , adjustRows
+        , layoutLane
+        , makeBlock
+        )
+
+{-| Functions to lay out lists of blocks into rows..
+-}
 
 import List.Extra as List
 
 
-type alias Block a =
-    { event : a, x : Float, width : Float, row : Int, rows : Int }
+{-| The layout algorithms accept and returns lists of structures of this type.
+They read the `left` and `right` fields, and set `row` and `rows`.
+-}
+type alias Block model =
+    { model : model -- the underlying model
+    , left : Float
+    , right : Float
+    , row : Int -- the assigned row
+    , rows : Int -- the number of rows high
+    }
 
 
+{-| A `Row` is a list of `Block`s. This type simplifies some of the function
+type signatures below. Not every `List Block` is typed as `Row`: some `List
+Block`s represent just that — a list of `Block`, that hasn't been organized into
+a row of same.
+-}
 type alias Row a =
     List (Block a)
 
 
-makeBlock : a -> Float -> Float -> Block a
-makeBlock a x width =
-    Block a x width 0 1
+{-| Make a `Block`.
+-}
+makeBlock : model -> Float -> Float -> Block model
+makeBlock model x width =
+    Block model x (x + width) 0 1
 
 
-overlaps : Block a -> Block a -> Bool
-overlaps b1 b2 =
-    (b1.x < b2.x + b2.width) && (b2.x < b1.x + b1.width)
+{-| Indicate whether two blocks overlap in x.
+-}
+overlapsInX : Block a -> Block a -> Bool
+overlapsInX b1 b2 =
+    b1.left < b2.right && b2.left < b1.right
 
 
-{-| Increment the row index of each block by dr for the dr + rowHeight for the second row, ec.
+{-| Increment the row index of each block by dr for the first row, dr +
+rowHeight for the second row, etc.
 -}
 adjustRows : Int -> Int -> List (Row a) -> List (Row a)
 adjustRows rowHeight dr rows =
@@ -37,7 +64,8 @@ adjustRows rowHeight dr rows =
                 newRow :: adjustRows rowHeight (dr + rowHeight) rs
 
 
-{-| If a block could be taller without overlapping another, make it so.
+{-| Adjust the heights (`rows` fields) of the blocks. Increase each block's rows
+as to cover following rows if this doesn't cause a collision.
 -}
 updateBlockHeights : List (Row a) -> List (Row a)
 updateBlockHeights rows =
@@ -45,7 +73,7 @@ updateBlockHeights rows =
         update rowsBelow block =
             let
                 n =
-                    List.takeWhile (not << List.any (overlaps block)) rowsBelow
+                    List.takeWhile (not << List.any (overlapsInX block)) rowsBelow
                         |> List.length
             in
                 { block | rows = 1 + n }
@@ -55,7 +83,7 @@ updateBlockHeights rows =
                 []
 
             r :: rs ->
-                (List.map (update rs) r) :: updateBlockHeights rs
+                List.map (update rs) r :: updateBlockHeights rs
 
 
 {-| Compute a row for each block, and update its {row, rows} fields.
@@ -68,7 +96,8 @@ layoutLane events =
         |> List.concat
 
 
-{-| Construct a list of rows. Each block is assigned to a row such that it doesn't overlap any other events. New rows are created as necessary.
+{-| Construct a list of rows. Each block is assigned to a row such that it
+doesn't overlap any other events. New rows are created as necessary.
 -}
 lanes : List (Block a) -> List (Row a)
 lanes events =
@@ -80,7 +109,7 @@ lanes events =
                     [ [ event ] ]
 
                 r :: rs ->
-                    if List.any (\e -> overlaps event e) r then
+                    if List.any (\e -> overlapsInX event e) r then
                         r :: addToRow event rs
                     else
                         (event :: r) :: rs

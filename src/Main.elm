@@ -1,33 +1,33 @@
 module Main exposing (..)
 
-import Config exposing (..)
+import Config exposing (config, eventColor)
 import Css
 import Data exposing (json)
 import Date exposing (Date)
-import DecoderExtra exposing (..)
+import DecoderExtra exposing (dateDecoder, optional)
 import GitHubRibbon exposing (ribbon)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (class, css, src)
 import Http
 import Json.Decode
-import Json.Decode.Pipeline as Pipeline exposing (decode, required)
+import Json.Decode.Pipeline exposing (decode, required)
 import Layout exposing (..)
 import Navigation exposing (Location)
 import Task
 
 
+type alias Flags =
+    { apiServer : String }
+
+
 main : Program Flags Model Msg
 main =
-    Navigation.programWithFlags (\_ -> Location)
+    Navigation.programWithFlags SetLocation
         { init = init
         , view = view >> toUnstyled
         , update = update
         , subscriptions = \_ -> Sub.none
         }
-
-
-type alias Flags =
-    { apiServer : String }
 
 
 
@@ -43,31 +43,35 @@ type alias Model =
 init : Flags -> Location -> ( Model, Cmd Msg )
 init flags loc =
     let
+        model =
+            Model [] Nothing
+
         useTestData =
             (loc.hostname == "localhost" || loc.hostname == "127.0.0.1")
                 && (loc.search /= "?server")
     in
         case useTestData of
             False ->
-                ( Model [] Nothing, getEvents flags.apiServer )
+                ( model, getEvents flags.apiServer )
 
             True ->
-                ( Model [] Nothing, send <| ReceiveEvents testData )
+                ( model, send <| ReceiveEvents parseTestData )
 
 
 getEvents : String -> Cmd Msg
 getEvents apiServer =
     let
         url =
-            apiServer ++ config.dataPath
-
-        request =
-            Http.get url (Json.Decode.list eventDecoder)
-
-        _ =
-            Debug.log "re" url
+            String.join ""
+                [ apiServer
+                , "/events?start="
+                , config.startDate
+                , "&end="
+                , config.endDate
+                ]
     in
-        Http.send (ReceiveEvents << Result.mapError toString) request
+        Http.get url (Json.Decode.list eventDecoder)
+            |> Http.send (ReceiveEvents << Result.mapError toString)
 
 
 send : a -> Cmd a
@@ -80,14 +84,14 @@ send =
 
 
 type Msg
-    = Location
+    = SetLocation Location
     | ReceiveEvents (Result String (List Event))
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        Location ->
+        SetLocation _ ->
             ( model, Cmd.none )
 
         ReceiveEvents result ->
@@ -107,16 +111,21 @@ view : Model -> Html msg
 view { error, events } =
     div []
         [ h1 [] [ logo, text "Schedule" ]
-        , fromUnstyled <|
-            ribbon
-                config.gitHubRepo
-                { position = GitHubRibbon.Right, color = GitHubRibbon.Gray }
+        , gitHubRibbon
         , div [ class "error" ] [ text <| Maybe.withDefault "" error ]
         , hourLabels
         , div [ css [ Css.position Css.relative ] ] <|
-            (List.map laneLabel config.laneNames)
-                ++ (eventsView events)
+            List.map laneLabel config.laneNames
+                ++ eventsView events
         ]
+
+
+gitHubRibbon : Html msg
+gitHubRibbon =
+    fromUnstyled <|
+        ribbon
+            config.gitHubRepo
+            { position = GitHubRibbon.Right, color = GitHubRibbon.Gray }
 
 
 logo : Html msg
@@ -126,6 +135,17 @@ logo =
         , src <| config.logoPath
         ]
         []
+
+
+hourLabels : Html msg
+hourLabels =
+    let
+        hourLabel h =
+            div [] [ text <| flip (++) ":00" <| toString <| ((h - 1) % 12) + 1 ]
+    in
+        div [ class "hours" ] <|
+            div [ class "location" ] []
+                :: (List.map hourLabel <| List.range 10 21)
 
 
 laneLabel : String -> Html msg
@@ -140,8 +160,16 @@ eventsView events =
     let
         mkBlock : Event -> Block Event
         mkBlock event =
-            makeBlock event (Date.toTime event.start) (Date.toTime event.end - Date.toTime event.start)
+            let
+                t0 =
+                    Date.toTime event.start
 
+                t1 =
+                    Date.toTime event.end - Date.toTime event.start
+            in
+                makeBlock event t0 t1
+
+        mkFullHeightBlock : Event -> Block Event
         mkFullHeightBlock event =
             let
                 block =
@@ -149,68 +177,58 @@ eventsView events =
             in
                 { block | rows = config.rowsPerLane * List.length config.laneNames }
 
-        locationless =
-            List.filter ((==) "" << (Maybe.withDefault "") << .location) events
+        locationlessEvents =
+            eventsAtLocation Nothing events
     in
         eventsByLane events
             |> List.map (List.map mkBlock)
             |> List.map layoutLane
             |> adjustRows config.rowsPerLane 0
             |> List.concat
-            |> (++) (List.map mkFullHeightBlock locationless)
+            |> (++) (List.map mkFullHeightBlock locationlessEvents)
             |> List.map eventView
 
 
 eventView : Block Event -> Html msg
-eventView block =
+eventView { model, row, rows } =
     let
-        event =
-            block.event
-
-        hours date =
+        getDateHours : Date -> Float
+        getDateHours date =
             toFloat (Date.hour date - 10) + (Date.minute date |> toFloat) / 60
 
-        xpos date =
-            config.laneLabelWidth + config.hourWidth * hours date
+        getDateX : Date -> Float
+        getDateX date =
+            config.laneLabelWidth + config.hourWidth * getDateHours date
 
-        left =
-            xpos event.start
-
-        right =
-            xpos event.end
+        ( left, right ) =
+            ( getDateX model.start, getDateX model.end )
 
         height =
-            config.rowHeight * block.rows - config.rowPadding
+            config.rowHeight * rows - config.rowPadding
+
+        isFullHeight =
+            rows > config.rowsPerLane
     in
         div
             [ class "event"
             , class
-                (if block.rows > config.rowsPerLane then
+                (if isFullHeight then
                     "full-height"
                  else
                     ""
                 )
             , css
                 [ Css.position Css.absolute
-                , Css.backgroundColor (Css.hex <| eventColor event)
-                , Css.top (Css.px <| toFloat <| block.row * config.rowHeight)
-                , Css.height (Css.px <| toFloat <| height)
-                , Css.left (Css.px <| left)
-                , Css.width (Css.px <| right - left - config.xMargin)
+                , Css.backgroundColor (Css.hex <| eventColor model)
+                , Css.top (Css.px <| toFloat <| row * config.rowHeight)
+                , Css.height (Css.px <| toFloat height)
+                , Css.left (Css.px left)
+                , Css.width (Css.px <| right - left - config.eventRightMargin)
                 ]
             ]
-            [ div [ class "label" ] [ text event.title ] ]
-
-
-hourLabels : Html msg
-hourLabels =
-    let
-        hourLabel h =
-            div [] [ text <| flip (++) ":00" <| toString <| ((h - 1) % 12) + 1 ]
-    in
-        div [ class "hours" ] <|
-            div [ class "location" ] []
-                :: (List.map hourLabel <| List.range 10 21)
+            [ div [ class "label" ]
+                [ text model.title ]
+            ]
 
 
 
@@ -227,14 +245,14 @@ type alias Event =
     }
 
 
-findLaneEvents : Maybe String -> List Event -> List Event
-findLaneEvents laneName events =
-    List.filter (.location >> (==) laneName) events
+eventsAtLocation : Maybe String -> List Event -> List Event
+eventsAtLocation loc events =
+    List.filter (.location >> (==) loc) events
 
 
 eventsByLane : List Event -> List (List Event)
 eventsByLane events =
-    List.map (\name -> findLaneEvents (Just name) events) config.laneNames
+    List.map (\name -> eventsAtLocation (Just name) events) config.laneNames
 
 
 
@@ -252,6 +270,6 @@ eventDecoder =
         |> required "labels" (Json.Decode.list Json.Decode.string)
 
 
-testData : Result String (List Event)
-testData =
+parseTestData : Result String (List Event)
+parseTestData =
     Json.Decode.decodeString (Json.Decode.list eventDecoder) json

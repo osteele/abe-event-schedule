@@ -2,19 +2,33 @@ module Config exposing (..)
 
 import Bitwise
 import Array
-import Set
+import Set exposing (Set)
 import Char
 
 
+{-| App and event configuration.
+
+I'm leaving the type signature of this, because it's still changing so often.
+
+-}
 config =
-    { gitHubRepo = { owner = "osteele", repo = "abvent" }
-    , laneLabelWidth = 120
+    { -- Change this if you fork the repo:
+      gitHubRepo = { owner = "osteele", repo = "abvent" }
+
+    -- Dimensional attributes. Some of these need to be changed in concert with
+    -- the CSS.
+    , laneLabelWidth = 120 -- CSS .swimlane.label.width
     , rowHeight = 40
     , rowPadding = 10
     , hourWidth = 100
-    , xMargin = 10
+    , eventRightMargin = 10
+
+    -- Specific to the event
     , logoPath = "/slacfest.png"
-    , dataPath = "/events/?start=2018-4-15&end=2018-4-16"
+
+    -- , dataPath = "/events/?start=2018-4-15&end=2018-4-16"
+    , startDate = "2018-4-15"
+    , endDate = "2018-4-16"
     , rowsPerLane = 3
     , laneNames =
         [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
@@ -28,24 +42,25 @@ eventColor { id, labels } =
         colors =
             config.colors
 
+        defaultColor =
+            "#000000"
+
         n =
             if Set.member "food" <| Set.fromList labels then
                 0
             else
-                (hash id % ((Array.length colors) - 1)) + 1
+                (hash id % (Array.length colors) - 1) + 1
     in
         Array.get n config.colors
-            |> Maybe.withDefault "#000000"
+            |> Maybe.withDefault defaultColor
 
 
-
--- swimlanes : Result String (List String)
--- swimlanes =
---     events
---         |> Result.map (List.map .location)
---         |> Result.map (List.filterMap identity)
---         |> Result.map Set.fromList
---         |> Result.map Set.toList
+collectLocations : List { a | location : Maybe String } -> Set String
+collectLocations events =
+    events
+        |> (List.map .location)
+        |> (List.filterMap identity)
+        |> Set.fromList
 
 
 {-| Translated from <http://www.cse.yorku.ca/~oz/hash.html#djb2>.
