@@ -7,7 +7,8 @@ import Char
 
 
 config =
-    { laneLabelWidth = 120
+    { gitHubRepo = { owner = "osteele", repo = "abvent" }
+    , laneLabelWidth = 120
     , rowHeight = 40
     , rowPadding = 10
     , hourWidth = 100

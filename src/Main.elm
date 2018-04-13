@@ -5,6 +5,7 @@ import Css
 import Data exposing (json)
 import Date exposing (Date)
 import DecoderExtra exposing (..)
+import GitHubRibbon exposing (ribbon)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (class, css, src)
 import Http
@@ -106,6 +107,10 @@ view : Model -> Html msg
 view { error, events } =
     div []
         [ h1 [] [ logo, text "Schedule" ]
+        , fromUnstyled <|
+            ribbon
+                config.gitHubRepo
+                { position = GitHubRibbon.Right, color = GitHubRibbon.Gray }
         , div [ class "error" ] [ text <| Maybe.withDefault "" error ]
         , hourLabels
         , div [ css [ Css.position Css.relative ] ] <|
