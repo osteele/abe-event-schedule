@@ -106,9 +106,13 @@ update msg model =
 
 
 type alias Schedule =
-    { lanes : List ( String, Layout.Row Event )
+    { lanes : List Lane
     , laneless : List (Block Event)
     }
+
+
+type alias Lane =
+    ( String, Layout.Row Event )
 
 
 makeSchedule : List Event -> Schedule
@@ -143,6 +147,19 @@ makeSchedule events =
         }
 
 
+laneRowCount : Lane -> Int
+laneRowCount ( _, row ) =
+    let
+        top =
+            row |> List.map .row |> List.minimum |> Maybe.withDefault 0
+    in
+        row
+            |> List.map (\{ row, rows } -> row + rows)
+            |> List.maximum
+            |> Maybe.map (\n -> n - top)
+            |> Maybe.withDefault 0
+
+
 
 -- VIEW
 
@@ -175,14 +192,21 @@ logo =
 
 
 schedule : Schedule -> Html msg
-schedule { lanes, laneless } =
-    div []
-        [ hourLabels
-        , div [ css [ Css.position Css.relative ] ] <|
-            List.map laneLabel config.lanes
-                ++ List.map laneView lanes
-                ++ List.map eventView laneless
-        ]
+schedule ({ lanes, laneless } as sched) =
+    let
+        _ =
+            lanes
+                |> List.map laneRowCount
+                |> List.maximum
+                |> Maybe.withDefault 0
+    in
+        div []
+            [ hourLabels
+            , div [ css [ Css.position Css.relative ] ] <|
+                List.map laneLabel config.lanes
+                    ++ List.map (laneView config.laneRows) lanes
+                    ++ List.map (eventView 0 1.0) laneless
+            ]
 
 
 hourLabels : Html msg
@@ -203,14 +227,23 @@ laneLabel title =
         ]
 
 
-laneView : ( String, Layout.Row Event ) -> Html msg
-laneView ( _, row ) =
-    div [] <| List.map eventView row
-
-
-eventView : Block Event -> Html msg
-eventView { model, row, rows } =
+laneView : Int -> Lane -> Html msg
+laneView maxRows (( _, row ) as lane) =
     let
+        topRow =
+            row |> List.map .row |> List.minimum |> Maybe.withDefault 0
+
+        stretch =
+            (toFloat maxRows) / (toFloat <| laneRowCount lane)
+    in
+        div [] <| List.map (eventView topRow stretch) row
+
+
+eventView : Int -> Float -> Block Event -> Html msg
+eventView topRow yScale { model, row, rows } =
+    let
+        -- _ =
+        -- Debug.log "stretch" stretch
         getDateHours : Date -> Float
         getDateHours date =
             toFloat (Date.hour date - 10) + (Date.minute date |> toFloat) / 60
@@ -239,8 +272,8 @@ eventView { model, row, rows } =
             , css
                 [ Css.position Css.absolute
                 , Css.backgroundColor (Css.hex <| eventColor model)
-                , Css.top (Css.px <| toFloat <| row * config.rowHeight)
-                , Css.height (Css.px <| toFloat height)
+                , Css.top (Css.px <| (+) (toFloat <| topRow * config.rowHeight) <| (*) yScale <| toFloat <| (row - topRow) * config.rowHeight)
+                , Css.height (Css.px <| (*) yScale <| toFloat height)
                 , Css.left (Css.px left)
                 , Css.width (Css.px <| right - left - config.eventRightMargin)
                 ]
