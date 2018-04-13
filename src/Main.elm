@@ -170,7 +170,7 @@ view { error, events } =
         [ h1 [] [ logo, text "Schedule" ]
         , gitHubRibbon
         , div [ class "error" ] [ text <| Maybe.withDefault "" error ]
-        , schedule <| makeSchedule events
+        , schedule events
         ]
 
 
@@ -191,32 +191,42 @@ logo =
         []
 
 
-schedule : Schedule -> Html msg
-schedule ({ lanes, laneless } as sched) =
+schedule : List Event -> Html msg
+schedule events =
     let
-        _ =
-            lanes
-                |> List.map laneRowCount
-                |> List.maximum
-                |> Maybe.withDefault 0
+        sched =
+            makeSchedule events
+
+        { lanes, laneless } =
+            sched
     in
         div []
-            [ hourLabels
+            [ hourLabels events
             , div [ css [ Css.position Css.relative ] ] <|
                 List.map (laneView config.laneRows) lanes
                     ++ List.map (eventView 0 1.0) laneless
             ]
 
 
-hourLabels : Html msg
-hourLabels =
+hourLabels : List Event -> Html msg
+hourLabels events =
     let
+        h0 =
+            List.map (Date.hour << .start) events
+                |> List.minimum
+                |> Maybe.withDefault 9
+
+        h1 =
+            List.map (Date.hour << .end) events
+                |> List.maximum
+                |> Maybe.withDefault 17
+
         hourLabel h =
             div [] [ text <| flip (++) ":00" <| toString <| ((h - 1) % 12) + 1 ]
     in
         div [ class "hours" ] <|
             div [ class "location" ] []
-                :: (List.map hourLabel <| List.range 10 21)
+                :: (List.map hourLabel <| List.range h0 h1)
 
 
 laneView : Int -> Lane -> Html msg
