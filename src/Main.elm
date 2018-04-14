@@ -263,6 +263,7 @@ eventView rowTop yScale { model, row, rows } =
             toFloat (row * config.rowHeight)
                 |> (*) yScale
                 |> (+) (toFloat rowTop)
+                |> (+) (toFloat config.rowPadding / 2)
 
         height =
             config.rowHeight * rows - config.rowPadding
