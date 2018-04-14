@@ -1,6 +1,7 @@
-# Abvent – ABE Event Display
+# ABE Event Schedule
 
-Display an event schedule from [ABE](https://github.com/olinlibrary/abe).
+Display an event schedule from events in
+[ABE](https://github.com/olinlibrary/abe).
 
 ## Develop
 

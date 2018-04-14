@@ -13,7 +13,7 @@ I'm leaving the type signature of this, because it's still changing so often.
 -}
 config =
     { -- Change this if you fork the repo:
-      gitHubRepo = { owner = "osteele", repo = "abvent" }
+      gitHubRepo = { owner = "osteele", repo = "abe-event-schedule" }
 
     -- Dimensional attributes. Some of these need to be changed in concert with
     -- the CSS.
@@ -23,16 +23,14 @@ config =
     , rowPadding = 10
     , hourWidth = 100
     , eventRightMargin = 10
+    , colors = Array.fromList [ "#ba263d", "#0090c6", "#705590", "#e37035", "#369249" ]
 
-    -- Specific to the event
+    -- Event-specific configuration
     , logoPath = "/slacfest.png"
-
-    -- , dataPath = "/events/?start=2018-4-15&end=2018-4-16"
     , startDate = "2018-4-15"
     , endDate = "2018-4-16"
     , rowsPerLane = 3
     , lanes = [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
-    , colors = Array.fromList [ "#ba263d", "#0090c6", "#705590", "#e37035", "#369249" ]
     }
 
 
@@ -55,8 +53,8 @@ eventColor { id, labels } =
             |> Maybe.withDefault defaultColor
 
 
-collectLocations : List { a | location : Maybe String } -> Set String
-collectLocations events =
+eventLocations : List { a | location : Maybe String } -> Set String
+eventLocations events =
     events
         |> List.map .location
         |> List.filterMap identity
