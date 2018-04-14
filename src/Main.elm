@@ -140,7 +140,6 @@ makeSchedule events =
             eventsByLane events
                 |> List.map (List.map mkBlock)
                 |> List.map Layout.layoutLane
-                |> Layout.adjustRows config.rowsPerLane 0
                 |> List.zip config.lanes
         , laneless =
             List.map mkFullHeightBlock <| eventsAtLocation Nothing events
@@ -149,15 +148,10 @@ makeSchedule events =
 
 laneRowCount : Lane -> Int
 laneRowCount ( _, blocks ) =
-    let
-        top =
-            blocks |> List.map .row |> List.minimum |> Maybe.withDefault 0
-    in
-        blocks
-            |> List.map (\{ row, rows } -> row + rows)
-            |> List.maximum
-            |> Maybe.map (\n -> n - top)
-            |> Maybe.withDefault 0
+    blocks
+        |> List.map (\{ row, rows } -> row + rows)
+        |> List.maximum
+        |> Maybe.withDefault 0
 
 
 
@@ -199,6 +193,13 @@ schedule events =
 
         { lanes, laneless } =
             sched
+
+        laneHeight =
+            config.laneRows * config.rowHeight
+
+        laneTops =
+            List.range 0 (List.length lanes)
+                |> List.map ((*) laneHeight)
     in
         if List.isEmpty events then
             div [ class "loading-delay" ] [ text "No events" ]
@@ -206,8 +207,8 @@ schedule events =
             div []
                 [ hourLabels events
                 , div [ css [ Css.position Css.relative ] ] <|
-                    List.map laneView lanes
-                        ++ List.map (eventView 0 1.0) laneless
+                    zipWith laneView laneTops lanes
+                        ++ List.map (eventView 0 1) laneless
                 ]
 
 
@@ -232,23 +233,20 @@ hourLabels events =
                 :: (List.map hourLabel <| List.range h0 h1)
 
 
-laneView : Lane -> Html msg
-laneView (( name, row ) as lane) =
+laneView : Int -> Lane -> Html msg
+laneView rowTop (( name, row ) as lane) =
     let
-        topRow =
-            row |> List.map .row |> List.minimum |> Maybe.withDefault 0
-
         stretch =
             toFloat config.laneRows / (toFloat <| laneRowCount lane)
     in
         div [ class "lane" ] <|
             [ h2 [] [ text name ]
             ]
-                ++ List.map (eventView topRow stretch) row
+                ++ List.map (eventView rowTop stretch) row
 
 
 eventView : Int -> Float -> Block Event -> Html msg
-eventView topRow yScale { model, row, rows } =
+eventView rowTop yScale { model, row, rows } =
     let
         getDateHours : Date -> Float
         getDateHours date =
@@ -263,7 +261,8 @@ eventView topRow yScale { model, row, rows } =
 
         top =
             toFloat (row * config.rowHeight)
-                |> scaleAround (toFloat <| topRow * config.rowHeight) yScale
+                |> (*) yScale
+                |> (+) (toFloat rowTop)
 
         height =
             config.rowHeight * rows - config.rowPadding

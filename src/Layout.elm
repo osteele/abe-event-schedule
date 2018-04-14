@@ -2,7 +2,6 @@ module Layout
     exposing
         ( Block
         , Row
-        , adjustRows
         , layoutLane
         , makeBlock
         )
@@ -49,21 +48,25 @@ overlapsInX a b =
     intersects ( a.left, a.right ) ( b.left, b.right )
 
 
-{-| Increment the row index of each block by dr for the first row, dr +
-rowHeight for the second row, etc.
+{-| Increment the block.row fields of each row's blocks by rowHeight times
+the number of preceding rows.
 -}
-adjustRows : Int -> Int -> List (Row a) -> List (Row a)
-adjustRows rowHeight dr rows =
-    case rows of
-        [] ->
-            []
+incrementRowIndexes : Int -> List (Row a) -> List (Row a)
+incrementRowIndexes rowHeight rows =
+    let
+        adjust accum rows =
+            case rows of
+                [] ->
+                    []
 
-        r :: rs ->
-            let
-                newRow =
-                    List.map (\e -> { e | row = e.row + dr }) r
-            in
-                newRow :: adjustRows rowHeight (dr + rowHeight) rs
+                r :: rs ->
+                    let
+                        newRow =
+                            List.map (\e -> { e | row = e.row + accum }) r
+                    in
+                        newRow :: adjust (accum + rowHeight) rs
+    in
+        adjust 0 rows
 
 
 {-| Adjust the heights (`rows` fields) of the blocks. Increase each block's rows
@@ -93,7 +96,7 @@ updateBlockHeights rows =
 layoutLane : List (Block a) -> List (Block a)
 layoutLane events =
     lanes events
-        |> adjustRows 1 0
+        |> incrementRowIndexes 1
         |> updateBlockHeights
         |> List.concat
 

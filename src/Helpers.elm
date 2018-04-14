@@ -1,5 +1,6 @@
 module Helpers exposing (..)
 
+import List.Extra as List
 import Task
 
 
@@ -50,3 +51,8 @@ urlJoin base path =
 
         _ ->
             base ++ path
+
+
+zipWith : (a -> b -> c) -> List a -> List b -> List c
+zipWith fn xs ys =
+    List.map (uncurry fn) <| List.zip xs ys
