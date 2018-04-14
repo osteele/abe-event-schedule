@@ -44,6 +44,13 @@ env API_SERVER=https://abe.example.com yarn start
 
 ### Lint
 
+```
+yarn test
+yarn test:watch
+```
+
+### Lint
+
 ```bash
 $ yarn lint
 ```

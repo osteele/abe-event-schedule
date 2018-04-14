@@ -10,6 +10,7 @@ module Layout
 {-| Functions to lay out lists of blocks into rows..
 -}
 
+import Helpers exposing (intersects)
 import List.Extra as List
 
 
@@ -44,8 +45,8 @@ makeBlock model x width =
 {-| Indicate whether two blocks overlap in x.
 -}
 overlapsInX : Block a -> Block a -> Bool
-overlapsInX b1 b2 =
-    b1.left < b2.right && b2.left < b1.right
+overlapsInX a b =
+    intersects ( a.left, a.right ) ( b.left, b.right )
 
 
 {-| Increment the row index of each block by dr for the first row, dr +

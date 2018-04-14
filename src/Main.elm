@@ -6,6 +6,7 @@ import Data exposing (json)
 import Date exposing (Date)
 import DecoderExtra exposing (dateDecoder, optional)
 import GitHubRibbon exposing (ribbon)
+import Helpers exposing (..)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (class, css, src)
 import Http
@@ -258,12 +259,6 @@ eventView topRow yScale { model, row, rows } =
         getDateX date =
             config.laneLabelWidth + config.hourWidth * getDateHours date
 
-        scaleAround origin scale x =
-            x
-                |> flip (-) origin
-                |> (*) yScale
-                |> (+) origin
-
         ( left, right ) =
             ( getDateX model.start, getDateX model.end )
 
@@ -341,32 +336,3 @@ eventDecoder =
 parseTestData : Result String (List Event)
 parseTestData =
     Json.Decode.decodeString (Json.Decode.list eventDecoder) json
-
-
-
--- HELPERS
-
-
-{-| Send a message.
--}
-send : a -> Cmd a
-send =
-    Task.succeed >> Task.perform identity
-
-
-{-| Poor-person's URL join. This just handles the case of joining a base with
-a path, with all possible combinations of '/' and the end of the base and '/'
-at the start of the path. It assumes the path is meant to be absolute, and
-doesn't handle `..`.
--}
-urlJoin : String -> String -> String
-urlJoin base path =
-    case ( String.endsWith "/" base, String.startsWith "/" path ) of
-        ( True, True ) ->
-            base ++ String.dropLeft 1 path
-
-        ( False, False ) ->
-            base ++ "/" ++ path
-
-        _ ->
-            base ++ path
