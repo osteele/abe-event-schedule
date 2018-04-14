@@ -1,40 +1,39 @@
 {
-    "name": "abvent",
-    "version": "0.1.0",
-    "description": "Display an event schedule from ABE",
-    "homepage": "https://github.com/osteele/abvent",
-    "author": "Oliver Steele <steele@osteele.com>",
-    "repository": "github:osteele/abvent",
-    "license": "MIT",
-    "scripts": {
-        "analyse": "elm-analyse",
-        "analyze": "elm-analyse",
-        "build": "poi build",
-        "deploy": "yarn build && netlifyctl deploy -b dist",
-        "format": "eslint --fix index.js src && elm-format --yes src",
-        "install":
-            "elm-package install -y && cd tests && elm-package install -y",
-        "lint": "eslint index.js src && elm-format --validate src",
-        "prebuild": "rimraf dist",
-        "reinstall":
-            "rimraf node_modules elm-stuff tests/elm-stuff && yarn install",
-        "start": "poi",
-        "test:watch": "elm test --watch",
-        "test": "elm test"
-    },
-    "devDependencies": {
-        "elm": "^0.18.0",
-        "elm-analyse": "^0.13.3",
-        "elm-format": "^0.6.1-alpha",
-        "elm-test": "^0.18.12",
-        "eslint": "^4.18.0",
-        "eslint-config-airbnb-base": "^12.1.0",
-        "eslint-plugin-import": "^2.8.0",
-        "node-sass": "^4.7.2",
-        "poi": "^9.6.12",
-        "poi-preset-elm": "^1.1.1",
-        "sass-loader": "^6.0.6",
-        "webpack": "^3.10.0"
-    },
-    "dependencies": {}
+  "name": "abvent",
+  "version": "0.1.0",
+  "description": "Display an event schedule from ABE",
+  "homepage": "https://github.com/osteele/abvent",
+  "author": "Oliver Steele <steele@osteele.com>",
+  "repository": "github:osteele/abvent",
+  "license": "MIT",
+  "scripts": {
+    "analyse": "elm-analyse",
+    "analyze": "elm-analyse",
+    "build": "poi build",
+    "deploy":
+      "echo API_SERVER=${API_SERVER?Need a value} && yarn build && netlifyctl deploy -b dist",
+    "format": "eslint --fix index.js src && elm-format --yes src",
+    "install": "elm-package install -y && cd tests && elm-package install -y",
+    "lint": "eslint index.js src && elm-format --validate src",
+    "prebuild": "rimraf dist",
+    "reinstall": "rimraf node_modules elm-stuff tests/elm-stuff && yarn install",
+    "start": "poi",
+    "test:watch": "elm test --watch",
+    "test": "elm test"
+  },
+  "devDependencies": {
+    "elm": "^0.18.0",
+    "elm-analyse": "^0.13.3",
+    "elm-format": "^0.6.1-alpha",
+    "elm-test": "^0.18.12",
+    "eslint": "^4.18.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "node-sass": "^4.7.2",
+    "poi": "^9.6.12",
+    "poi-preset-elm": "^1.1.1",
+    "sass-loader": "^6.0.6",
+    "webpack": "^3.10.0"
+  },
+  "dependencies": {}
 }
