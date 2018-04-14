@@ -21,11 +21,10 @@ intersects a b =
 {-| Scale x by scale around origin.
 -}
 scaleAround : Float -> Float -> Float -> Float
-scaleAround origin scale x =
-    x
-        |> flip (-) origin
-        |> (*) scale
-        |> (+) origin
+scaleAround origin scale =
+    flip (-) origin
+        >> (*) scale
+        >> (+) origin
 
 
 {-| Send a message.

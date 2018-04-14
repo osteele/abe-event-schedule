@@ -207,7 +207,7 @@ schedule events =
             div []
                 [ hourLabels events
                 , div [ css [ Css.position Css.relative ] ] <|
-                    List.map (laneView config.laneRows) lanes
+                    List.map laneView lanes
                         ++ List.map (eventView 0 1.0) laneless
                 ]
 
@@ -233,14 +233,14 @@ hourLabels events =
                 :: (List.map hourLabel <| List.range h0 h1)
 
 
-laneView : Int -> Lane -> Html msg
-laneView maxRows (( name, row ) as lane) =
+laneView : Lane -> Html msg
+laneView (( name, row ) as lane) =
     let
         topRow =
             row |> List.map .row |> List.minimum |> Maybe.withDefault 0
 
         stretch =
-            (toFloat maxRows) / (toFloat <| laneRowCount lane)
+            (toFloat config.laneRows) / (toFloat <| laneRowCount lane)
     in
         div [ class "lane" ] <|
             [ h2 [] [ text name ]
