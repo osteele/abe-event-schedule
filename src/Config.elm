@@ -58,8 +58,8 @@ eventColor { id, labels } =
 collectLocations : List { a | location : Maybe String } -> Set String
 collectLocations events =
     events
-        |> (List.map .location)
-        |> (List.filterMap identity)
+        |> List.map .location
+        |> List.filterMap identity
         |> Set.fromList
 
 

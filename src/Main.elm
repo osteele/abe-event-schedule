@@ -15,7 +15,6 @@ import Json.Decode.Pipeline exposing (decode, required)
 import Layout exposing (Block)
 import List.Extra as List
 import Navigation exposing (Location)
-import Task
 
 
 type alias Flags =
@@ -149,12 +148,12 @@ makeSchedule events =
 
 
 laneRowCount : Lane -> Int
-laneRowCount ( _, row ) =
+laneRowCount ( _, blocks ) =
     let
         top =
-            row |> List.map .row |> List.minimum |> Maybe.withDefault 0
+            blocks |> List.map .row |> List.minimum |> Maybe.withDefault 0
     in
-        row
+        blocks
             |> List.map (\{ row, rows } -> row + rows)
             |> List.maximum
             |> Maybe.map (\n -> n - top)
@@ -240,7 +239,7 @@ laneView (( name, row ) as lane) =
             row |> List.map .row |> List.minimum |> Maybe.withDefault 0
 
         stretch =
-            (toFloat config.laneRows) / (toFloat <| laneRowCount lane)
+            toFloat config.laneRows / (toFloat <| laneRowCount lane)
     in
         div [ class "lane" ] <|
             [ h2 [] [ text name ]

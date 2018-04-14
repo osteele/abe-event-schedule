@@ -6,10 +6,10 @@ import Task
 intersects : ( Float, Float ) -> ( Float, Float ) -> Bool
 intersects a b =
     let
-        ( a0, a1 ) =
+        ( a0, _ ) =
             a
 
-        ( b0, b1 ) =
+        ( b0, _ ) =
             b
 
         between x ( left, right ) =
