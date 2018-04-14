@@ -30,7 +30,7 @@ config =
     , startDate = "2018-4-15"
     , endDate = "2018-4-16"
     , rowsPerLane = 3
-    , lanes = [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
+    , lanes = Just [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
     }
 
 

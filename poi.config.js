@@ -11,6 +11,6 @@ module.exports = {
     API_SERVER: process.env.API_SERVER,
   },
   html: {
-    title: 'ABE Schedule',
+    title: 'ABE Event Schedule',
   },
 };

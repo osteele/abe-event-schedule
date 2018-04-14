@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Config exposing (config, eventColor)
+import Config exposing (config, eventColor, eventLocations)
 import Css
 import Data exposing (json)
 import Date exposing (Date)
@@ -15,6 +15,7 @@ import Json.Decode.Pipeline exposing (decode, required)
 import Layout exposing (Block)
 import List.Extra as List
 import Navigation exposing (Location)
+import Set
 
 
 type alias Flags =
@@ -134,13 +135,22 @@ makeSchedule events =
                 block =
                     mkBlock event
             in
-                { block | rows = config.rowsPerLane * List.length config.lanes }
+                { block | rows = config.rowsPerLane * List.length laneNames }
+
+        laneNames =
+            config.lanes
+                |> Maybe.withDefault
+                    (eventLocations events
+                        |> Set.toList
+                        |> List.sort
+                    )
     in
         { lanes =
-            eventsByLane events
+            laneNames
+                |> List.map (\name -> eventsAtLocation (Just name) events)
                 |> List.map (List.map mkBlock)
                 |> List.map Layout.layoutLane
-                |> List.zip config.lanes
+                |> List.zip laneNames
         , laneless =
             List.map mkFullHeightBlock <| eventsAtLocation Nothing events
         }
@@ -310,11 +320,6 @@ type alias Event =
 eventsAtLocation : Maybe String -> List Event -> List Event
 eventsAtLocation loc events =
     List.filter (.location >> (==) loc) events
-
-
-eventsByLane : List Event -> List (List Event)
-eventsByLane events =
-    List.map (\name -> eventsAtLocation (Just name) events) config.lanes
 
 
 
