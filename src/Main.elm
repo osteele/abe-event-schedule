@@ -200,12 +200,15 @@ schedule events =
         { lanes, laneless } =
             sched
     in
-        div []
-            [ hourLabels events
-            , div [ css [ Css.position Css.relative ] ] <|
-                List.map (laneView config.laneRows) lanes
-                    ++ List.map (eventView 0 1.0) laneless
-            ]
+        if List.isEmpty events then
+            div [ class "loading-delay" ] [ text "No events" ]
+        else
+            div []
+                [ hourLabels events
+                , div [ css [ Css.position Css.relative ] ] <|
+                    List.map (laneView config.laneRows) lanes
+                        ++ List.map (eventView 0 1.0) laneless
+                ]
 
 
 hourLabels : List Event -> Html msg

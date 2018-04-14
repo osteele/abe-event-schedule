@@ -12,6 +12,20 @@ h1 {
     background-color: yellow;
 }
 
+.loading-delay {
+    opacity: 0;
+    animation: fadeinLoad 1s 1s forwards;
+}
+
+@keyframes fadeinLoad {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 .hours {
     div {
         display: inline-block;
