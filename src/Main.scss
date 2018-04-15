@@ -1,3 +1,7 @@
+// These variables need to be aligned with Config.elm
+$lane-label-width: 120px;
+$lane-height: 120px;
+$hour-width: 90px;
 .logo {
     width: 80px;
 }
@@ -27,22 +31,22 @@ h1 {
 }
 
 .hours {
-    padding-left: 120px;
+    padding-left: $lane-label-width;
     .hour {
         display: inline-block;
-        width: 90px;
+        width: $hour-width;
     }
 }
 
 .lane {
-    height: 120px;
+    height: $lane-height;
     border-top: 1px solid gray;
     h2 {
         display: inline-block;
         font-size: 20pt;
         text-align: center;
         font-weight: normal;
-        width: 120px;
+        width: $lane-label-width;
         font-variant: small-caps;
     }
 }
