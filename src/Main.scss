@@ -27,9 +27,10 @@ h1 {
 }
 
 .hours {
-    div {
+    padding-left: 120px;
+    .hour {
         display: inline-block;
-        width: 100px;
+        width: 90px;
     }
 }
 

@@ -225,22 +225,21 @@ schedule events =
 hourLabels : List Event -> Html msg
 hourLabels events =
     let
-        h0 =
+        firstHour =
             List.map (Date.hour << .start) events
                 |> List.minimum
                 |> Maybe.withDefault 9
 
-        h1 =
+        lastHour =
             List.map (Date.hour << .end) events
                 |> List.maximum
                 |> Maybe.withDefault 17
 
         hourLabel h =
-            div [] [ text <| flip (++) ":00" <| toString <| ((h - 1) % 12) + 1 ]
+            div [ class "hour" ] [ text <| flip (++) ":00" <| toString <| ((h - 1) % 12) + 1 ]
     in
-        div [ class "hours" ] <|
-            div [ class "location" ] []
-                :: (List.map hourLabel <| List.range h0 h1)
+        div [ class "hours" ]
+            (List.map hourLabel <| List.range firstHour lastHour)
 
 
 laneView : Int -> Lane -> Html msg

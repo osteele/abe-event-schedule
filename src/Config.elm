@@ -17,11 +17,11 @@ config =
 
     -- Dimensional attributes. Some of these need to be changed in concert with
     -- the CSS.
-    , laneLabelWidth = 120 -- CSS .swimlane.label.width
-    , laneHeight = 121 -- FIXME: why not 120?
+    , laneLabelWidth = 120 -- CSS .swimlane.label width
+    , laneHeight = 121 -- CSS .lane height FIXME: why not 120?
+    , hourWidth = 90 -- CSS .hours.hour width
     , lanePadding = 10
     , rowPadding = 10
-    , hourWidth = 100
     , eventRightMargin = 10
     , colors = Array.fromList [ "#ba263d", "#0090c6", "#705590", "#e37035", "#369249" ]
 
