@@ -18,8 +18,7 @@ config =
     -- Dimensional attributes. Some of these need to be changed in concert with
     -- the CSS.
     , laneLabelWidth = 120 -- CSS .swimlane.label.width
-    , laneRows = 3
-    , rowHeight = 40
+    , laneHeight = 120
     , rowPadding = 10
     , hourWidth = 100
     , eventRightMargin = 10
@@ -29,7 +28,6 @@ config =
     , logoPath = "/slacfest.png"
     , startDate = "2018-4-15"
     , endDate = "2018-4-16"
-    , rowsPerLane = 3
     , lanes = Just [ "Entrance", "Upper Level", "Down Stairs", "Work Room" ]
     }
 

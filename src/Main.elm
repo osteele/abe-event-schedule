@@ -135,7 +135,7 @@ makeSchedule events =
                 block =
                     mkBlock event
             in
-                { block | rows = config.rowsPerLane * List.length laneNames }
+                { block | rows = 1 }
 
         laneNames =
             config.lanes
@@ -204,12 +204,9 @@ schedule events =
         { lanes, laneless } =
             sched
 
-        laneHeight =
-            config.laneRows * config.rowHeight
-
         laneTops =
             List.range 0 (List.length lanes)
-                |> List.map ((*) laneHeight)
+                |> List.map ((*) config.laneHeight)
     in
         if List.isEmpty events then
             div [ class "loading-delay" ] [ text "No events" ]
@@ -218,7 +215,7 @@ schedule events =
                 [ hourLabels events
                 , div [ css [ Css.position Css.relative ] ] <|
                     zipWith laneView laneTops lanes
-                        ++ List.map (eventView 0 1) laneless
+                        ++ List.map (eventView True 0 (config.laneHeight * List.length lanes)) laneless
                 ]
 
 
@@ -246,17 +243,17 @@ hourLabels events =
 laneView : Int -> Lane -> Html msg
 laneView rowTop (( name, row ) as lane) =
     let
-        stretch =
-            toFloat config.laneRows / (toFloat <| laneRowCount lane)
+        rowHeight =
+            config.laneHeight // laneRowCount lane
     in
         div [ class "lane" ] <|
             [ h2 [] [ text name ]
             ]
-                ++ List.map (eventView rowTop stretch) row
+                ++ List.map (eventView False rowTop rowHeight) row
 
 
-eventView : Int -> Float -> Block Event -> Html msg
-eventView rowTop yScale { model, row, rows } =
+eventView : Bool -> Int -> Int -> Block Event -> Html msg
+eventView isFullHeight rowTop rowHeight { model, row, rows } =
     let
         getDateHours : Date -> Float
         getDateHours date =
@@ -270,16 +267,16 @@ eventView rowTop yScale { model, row, rows } =
             ( getDateX model.start, getDateX model.end )
 
         top =
-            toFloat (row * config.rowHeight)
-                |> (*) yScale
-                |> (+) (toFloat rowTop)
-                |> (+) (toFloat config.rowPadding / 2)
+            (row * rowHeight)
+                |> (+) rowTop
+                |> (+) (config.rowPadding // 2)
+                |> toFloat
 
         height =
-            config.rowHeight * rows - config.rowPadding
-
-        isFullHeight =
-            rows > config.rowsPerLane
+            rowHeight
+                * rows
+                - config.rowPadding
+                |> toFloat
     in
         div
             [ class "event"
@@ -293,7 +290,7 @@ eventView rowTop yScale { model, row, rows } =
                 [ Css.position Css.absolute
                 , (Css.backgroundColor << Css.hex) <| eventColor model
                 , (Css.top << Css.px) top
-                , (Css.height << Css.px) <| yScale * toFloat height
+                , (Css.height << Css.px) height
                 , (Css.left << Css.px) left
                 , (Css.width << Css.px) <| right - left - config.eventRightMargin
                 ]
