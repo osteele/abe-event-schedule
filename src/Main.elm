@@ -207,6 +207,9 @@ schedule events =
         laneTops =
             List.range 0 (List.length lanes)
                 |> List.map ((*) config.laneHeight)
+
+        totalHeight =
+            config.laneHeight * List.length lanes
     in
         if List.isEmpty events then
             div [ class "loading-delay" ] [ text "No events" ]
@@ -215,7 +218,7 @@ schedule events =
                 [ hourLabels events
                 , div [ css [ Css.position Css.relative ] ] <|
                     zipWith laneView laneTops lanes
-                        ++ List.map (eventView True 0 (config.laneHeight * List.length lanes)) laneless
+                        ++ List.map (eventView True 0 totalHeight) laneless
                 ]
 
 
@@ -244,7 +247,8 @@ laneView : Int -> Lane -> Html msg
 laneView rowTop (( name, row ) as lane) =
     let
         rowHeight =
-            config.laneHeight // laneRowCount lane
+            -- FIXME: why not 2 *
+            (config.laneHeight - 1 * config.lanePadding) // laneRowCount lane
     in
         div [ class "lane" ] <|
             [ h2 [] [ text name ]
@@ -253,7 +257,7 @@ laneView rowTop (( name, row ) as lane) =
 
 
 eventView : Bool -> Int -> Int -> Block Event -> Html msg
-eventView isFullHeight rowTop rowHeight { model, row, rows } =
+eventView isFullHeight laneTop rowHeight { model, row, rows } =
     let
         getDateHours : Date -> Float
         getDateHours date =
@@ -267,16 +271,10 @@ eventView isFullHeight rowTop rowHeight { model, row, rows } =
             ( getDateX model.start, getDateX model.end )
 
         top =
-            (row * rowHeight)
-                |> (+) rowTop
-                |> (+) (config.rowPadding // 2)
-                |> toFloat
+            toFloat (laneTop + row * rowHeight + config.lanePadding)
 
         height =
-            rowHeight
-                * rows
-                - config.rowPadding
-                |> toFloat
+            toFloat (rowHeight * rows - config.rowPadding)
     in
         div
             [ class "event"

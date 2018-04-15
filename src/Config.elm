@@ -18,7 +18,8 @@ config =
     -- Dimensional attributes. Some of these need to be changed in concert with
     -- the CSS.
     , laneLabelWidth = 120 -- CSS .swimlane.label.width
-    , laneHeight = 120
+    , laneHeight = 121 -- FIXME: why not 120?
+    , lanePadding = 10
     , rowPadding = 10
     , hourWidth = 100
     , eventRightMargin = 10
